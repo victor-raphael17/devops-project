@@ -1,0 +1,20 @@
+services:
+  http-server-projeto-korp:
+    build: .
+    container_name: http-server-projeto-korp
+    networks:
+      - devops-korp
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    depends_on:
+      - http-server-projeto-korp
+    ports:
+      - "80:80"
+    networks:
+      - devops-korp
+    volumes:
+      - ./nginx/:/etc/nginx/conf.d/
+networks:
+  devops-korp:
+    driver: bridge
