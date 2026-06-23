@@ -1,0 +1,3 @@
+https://www.digitalocean.com/community/tutorials/how-to-make-an-http-server-in-go
+
+Based on this website, refactor the code. Also make it the easist as possible for human to read.
