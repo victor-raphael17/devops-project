@@ -15,6 +15,22 @@ services:
       - devops-korp
     volumes:
       - ./nginx/:/etc/nginx/conf.d/
+  # All-in-one observability backend (bundles Grafana and Prometheus). It
+  # scrapes the service /metrics endpoint and renders the provisioned dashboard.
+  otel-lgtm:
+    image: grafana/otel-lgtm:0.28.0
+    container_name: otel-lgtm
+    depends_on:
+      - http-server-projeto-korp
+    ports:
+      - "3000:3000"  # Grafana UI
+      - "9090:9090"  # Prometheus UI (targets / ad-hoc queries)
+    networks:
+      - devops-korp
+    volumes:
+      - ./observability/prometheus.yaml:/otel-lgtm/prometheus.yaml:ro
+      - ./observability/grafana/dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/projeto-korp.yaml:ro
+      - ./observability/grafana/dashboards:/otel-lgtm/grafana/dashboards:ro
 networks:
   devops-korp:
     driver: bridge

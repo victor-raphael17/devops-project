@@ -46,6 +46,31 @@ go run .
 go build -o http-server-projeto-korp . && ./http-server-projeto-korp
 ```
 
+## Monitoramento e Observabilidade
+
+O serviço expõe métricas no padrão do Prometheus em `GET /metrics`:
+
+- **Volume de requisições** — `http_requests_total`, um contador rotulado por
+  código HTTP (`code`) e método (`method`).
+- **Disponibilidade do serviço** — derivada da métrica `up` que o Prometheus
+  registra a cada coleta do alvo (`1` = disponível, `0` = indisponível).
+
+O `compose.yaml` inclui o container `otel-lgtm` (imagem `grafana/otel-lgtm`,
+que empacota Grafana e Prometheus). O Prometheus coleta o `/metrics` do serviço
+e o Grafana já vem com um dashboard provisionado para analisar o comportamento
+do serviço.
+
+```bash
+# sobe o serviço, o proxy reverso e a stack de observabilidade
+docker compose up -d --build
+```
+
+| Interface  | URL                     | Descrição                                  |
+| ---------- | ----------------------- | ------------------------------------------ |
+| Serviço    | http://localhost/projeto-korp | Endpoint exposto via Nginx.          |
+| Grafana    | http://localhost:3000   | Dashboard _Projeto Korp_ (acesso anônimo). |
+| Prometheus | http://localhost:9090   | Alvos coletados e consultas ad-hoc.        |
+
 ## Configuração
 
 | Variável | Padrão | Descrição                          |

@@ -2,8 +2,8 @@ FROM golang:1.23-alpine AS build
 
 WORKDIR /src
 
-#the application uses only the standard library, so there is no go.sum
-COPY go.mod ./
+# Download dependencies first so this layer is cached across source changes.
+COPY go.mod go.sum ./
 RUN go mod download
 
 # CGO_ENABLED=0 produces a static binary, with no libc dependency.

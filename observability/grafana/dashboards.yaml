@@ -1,0 +1,11 @@
+# Registers a Grafana dashboard provider that loads every JSON dashboard
+# mounted under /otel-lgtm/grafana/dashboards.
+apiVersion: 1
+providers:
+  - name: Projeto Korp
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /otel-lgtm/grafana/dashboards
+      foldersFromFilesStructure: false

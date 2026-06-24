@@ -4,3 +4,6 @@
 Dockerfile
 README.md
 *.md
+compose.yaml
+nginx/
+observability/

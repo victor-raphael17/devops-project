@@ -8,6 +8,10 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -21,10 +25,25 @@ type response struct {
 	Time string `json:"horario"`
 }
 
+// requestsTotal counts the requests served by GET /projeto-korp, labelled by
+// HTTP status code and method, so Prometheus can measure request volume.
+var requestsTotal = promauto.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "http_requests_total",
+		Help: "Total number of HTTP requests served by /projeto-korp.",
+	},
+	[]string{"code", "method"},
+)
+
 func main() {
-	// Register the endpoint on our own router (instead of the global one).
+	// Register the endpoints on our own router (instead of the global one).
 	router := http.NewServeMux()
-	router.HandleFunc("GET /projeto-korp", handleProjetoKorp)
+	// InstrumentHandlerCounter increments requestsTotal on every request,
+	// keeping the metric logic out of the business handler.
+	router.Handle("GET /projeto-korp", promhttp.InstrumentHandlerCounter(
+		requestsTotal, http.HandlerFunc(handleProjetoKorp)))
+	// /metrics exposes the collected metrics in the Prometheus exposition format.
+	router.Handle("GET /metrics", promhttp.Handler())
 
 	// ReadHeaderTimeout guards against slow clients holding the connection open.
 	server := &http.Server{

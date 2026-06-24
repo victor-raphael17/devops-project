@@ -1,0 +1,14 @@
+# Prometheus configuration mounted into the grafana/otel-lgtm container,
+# replacing the bundled default so Prometheus scrapes the application service.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # The Go service exposes Prometheus metrics at /metrics on port 8080.
+  # The `up` series Prometheus records for this target doubles as the
+  # service availability signal.
+  - job_name: http-server-projeto-korp
+    static_configs:
+      - targets:
+          - http-server-projeto-korp:8080
