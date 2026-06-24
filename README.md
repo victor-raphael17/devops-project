@@ -65,11 +65,11 @@ do serviço.
 docker compose up -d --build
 ```
 
-| Interface  | URL                     | Descrição                                  |
-| ---------- | ----------------------- | ------------------------------------------ |
-| Serviço    | http://localhost/projeto-korp | Endpoint exposto via Nginx.          |
-| Grafana    | http://localhost:3000   | Dashboard _Projeto Korp_ (acesso anônimo). |
-| Prometheus | http://localhost:9090   | Alvos coletados e consultas ad-hoc.        |
+| Interface  | URL                           | Descrição                                  |
+| ---------- | ----------------------------- | ------------------------------------------ |
+| Serviço    | http://localhost/projeto-korp | Endpoint exposto via Nginx.                |
+| Grafana    | http://localhost:3000         | Dashboard _Projeto Korp_ (acesso anônimo). |
+| Prometheus | http://localhost:9090         | Alvos coletados e consultas ad-hoc.        |
 
 ## Configuração
 

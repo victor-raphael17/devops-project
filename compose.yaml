@@ -2,26 +2,29 @@ services:
   http-server-projeto-korp:
     build: .
     container_name: http-server-projeto-korp
+    restart: unless-stopped
     networks:
       - devops-korp
   nginx:
     image: nginx:latest
     container_name: nginx
+    restart: unless-stopped
     depends_on:
-      - http-server-projeto-korp
+      http-server-projeto-korp:
+        condition: service_healthy
     ports:
       - "80:80"
     networks:
       - devops-korp
     volumes:
       - ./nginx/:/etc/nginx/conf.d/
-  # All-in-one observability backend (bundles Grafana and Prometheus). It
-  # scrapes the service /metrics endpoint and renders the provisioned dashboard.
   otel-lgtm:
     image: grafana/otel-lgtm:0.28.0
     container_name: otel-lgtm
+    restart: unless-stopped
     depends_on:
-      - http-server-projeto-korp
+      http-server-projeto-korp:
+        condition: service_healthy
     ports:
       - "3000:3000"  # Grafana UI
       - "9090:9090"  # Prometheus UI (targets / ad-hoc queries)

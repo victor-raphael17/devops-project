@@ -2,7 +2,6 @@ FROM golang:1.23-alpine AS build
 
 WORKDIR /src
 
-# Download dependencies first so this layer is cached across source changes.
 COPY go.mod go.sum ./
 RUN go mod download
 
@@ -23,7 +22,6 @@ COPY --from=build /bin/http-server-projeto-korp /usr/local/bin/http-server-proje
 
 EXPOSE 8080
 
-# Checks the container's health by querying its own endpoint.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget -q -O /dev/null http://127.0.0.1:8080/projeto-korp || exit 1
 
