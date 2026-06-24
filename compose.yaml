@@ -35,5 +35,8 @@ services:
       - ./observability/grafana/dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/projeto-korp.yaml:ro
       - ./observability/grafana/dashboards:/otel-lgtm/grafana/dashboards:ro
 networks:
+  # Provisioned outside Compose (by the Ansible playbook, or manually with
+  # `docker network create devops-korp`) so the network is managed in one place.
   devops-korp:
-    driver: bridge
+    external: true
+    name: devops-korp

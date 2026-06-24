@@ -1,0 +1,98 @@
+---
+- name: Provision the Projeto Korp environment
+  hosts: korp
+  become: true
+  gather_facts: true
+  vars:
+    project_dir: "{{ playbook_dir | dirname }}"
+    service_url: "http://localhost/projeto-korp"
+    docker_network: devops-korp
+    docker_apt_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+  tasks:
+    - name: Fail early on unsupported distributions
+      ansible.builtin.assert:
+        that: ansible_os_family == 'Debian'
+        fail_msg: >-
+          This playbook automates Docker installation for Debian/Ubuntu hosts.
+          Adapt the "Install Docker" block for other distributions.
+    - name: Install Docker prerequisites
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+        update_cache: true
+    - name: Create the apt keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+    - name: Add Docker's official GPG key
+      ansible.builtin.get_url:
+        url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+    - name: Add the Docker apt repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/{{ ansible_distribution | lower }}
+          {{ ansible_distribution_release }} stable
+        filename: docker
+        state: present
+    - name: Install Docker Engine, CLI, and the Compose plugin
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+    - name: Ensure the Docker service is enabled and running
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+    - name: Add the login user to the docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user_id }}"
+        groups: docker
+        append: true
+      when: ansible_user_id != 'root'
+    - name: Check whether the {{ docker_network }} network exists
+      ansible.builtin.command:
+        cmd: "docker network inspect {{ docker_network }}"
+      register: korp_network
+      changed_when: false
+      failed_when: false
+    - name: Create the {{ docker_network }} Docker network
+      ansible.builtin.command:
+        cmd: "docker network create {{ docker_network }}"
+      when: korp_network.rc != 0
+    - name: Build the image and start the stack with Docker Compose
+      ansible.builtin.command:
+        cmd: docker compose up --detach --build
+        chdir: "{{ project_dir }}"
+      register: compose_up
+      changed_when: >-
+        ('Started' in compose_up.stderr) or ('Created' in compose_up.stderr)
+        or ('Recreated' in compose_up.stderr) or ('Built' in compose_up.stderr)
+    - name: Wait for the service to answer through the Nginx reverse proxy
+      ansible.builtin.uri:
+        url: "{{ service_url }}"
+        method: GET
+        return_content: true
+        status_code: 200
+      register: korp_response
+      retries: 30
+      delay: 2
+      until: korp_response.status == 200
+    - name: Display the service response on the console
+      ansible.builtin.debug:
+        msg:
+          - "HTTP {{ korp_response.status }} from {{ service_url }}"
+          - "nome:    {{ korp_response.json.nome }}"
+          - "horario: {{ korp_response.json.horario }}"
