@@ -14,7 +14,7 @@ readonly DURATION="${DURATION:-50}"
 send_batch() {
 	local request
 	for ((request = 1; request <= BATCH_SIZE; request++)); do
-		curl -s -o /dev/null "${URL}" &
+		curl -s -o /dev/null --max-time 10 "${URL}" &
 	done
 	wait
 }

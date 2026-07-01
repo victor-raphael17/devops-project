@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.25-alpine AS build
 
 WORKDIR /src
 
@@ -13,7 +13,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags="-s -w" \
     -o /bin/http-server-projeto-korp .
 
-FROM alpine:3.20
+FROM alpine:3.22
 
 RUN addgroup -S korp && adduser -S -G korp korp
 USER korp
@@ -22,7 +22,10 @@ COPY --from=build /bin/http-server-projeto-korp /usr/local/bin/http-server-proje
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget -q -O /dev/null http://127.0.0.1:8080/projeto-korp || exit 1
+# /healthz is not instrumented, so probes don't show up in the request metrics.
+# --start-interval probes every 2s during start-up, so dependent containers
+# (nginx gates on service_healthy) come up seconds after the server does.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=2s --retries=3 \
+    CMD wget -q -O /dev/null "http://127.0.0.1:${PORT:-8080}/healthz" || exit 1
 
 ENTRYPOINT ["http-server-projeto-korp"]

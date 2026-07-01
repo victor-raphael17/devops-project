@@ -46,6 +46,12 @@ go run .
 go build -o http-server-projeto-korp . && ./http-server-projeto-korp
 ```
 
+Para rodar os testes:
+
+```bash
+go test ./...
+```
+
 ## Monitoramento e Observabilidade
 
 O serviço expõe métricas no padrão do Prometheus em `GET /metrics`:
@@ -54,6 +60,11 @@ O serviço expõe métricas no padrão do Prometheus em `GET /metrics`:
   código HTTP (`code`) e método (`method`).
 - **Disponibilidade do serviço** — derivada da métrica `up` que o Prometheus
   registra a cada coleta do alvo (`1` = disponível, `0` = indisponível).
+
+O `HEALTHCHECK` do container consulta `GET /healthz`, um endpoint de liveness
+fora da instrumentação — assim as sondas não inflam as métricas de requisições.
+O Nginx expõe publicamente apenas `GET /projeto-korp`; `/metrics` e `/healthz`
+ficam restritos à rede interna do Docker.
 
 O `compose.yaml` inclui o container `otel-lgtm` (imagem `grafana/otel-lgtm`,
 que empacota Grafana e Prometheus). O Prometheus coleta o `/metrics` do serviço

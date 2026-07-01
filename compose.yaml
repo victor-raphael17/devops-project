@@ -6,7 +6,7 @@ services:
     networks:
       - devops-korp
   nginx:
-    image: nginx:latest
+    image: nginx:1.28-alpine
     container_name: nginx
     restart: unless-stopped
     depends_on:
@@ -18,13 +18,12 @@ services:
       - devops-korp
     volumes:
       - ./nginx/:/etc/nginx/conf.d/
+  # No depends_on: the monitoring stack starts independently of the service it
+  # observes, so Prometheus records downtime (up == 0) instead of not running.
   otel-lgtm:
     image: grafana/otel-lgtm:0.28.0
     container_name: otel-lgtm
     restart: unless-stopped
-    depends_on:
-      http-server-projeto-korp:
-        condition: service_healthy
     ports:
       - "3000:3000"  # Grafana UI
       - "9090:9090"  # Prometheus UI (targets / ad-hoc queries)

@@ -7,3 +7,5 @@ README.md
 compose.yaml
 nginx/
 observability/
+ansible/
+*.sh
